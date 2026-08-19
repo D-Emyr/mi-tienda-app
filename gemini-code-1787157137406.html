@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planificador Integral - Finca Lechera | daryanaemyr.net</title>
+    <!-- Librería Chart.js para gráficas en tiempo real -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #1b4332;
+            --secondary-color: #2d6a4f;
+            --accent-color: #52b788;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-color: #212529;
+            --text-muted: #6c757d;
+            --border-color: #dee2e6;
+            --kpi-bg: #e8f5e9;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #52b788;
+            --secondary-color: #40916c;
+            --accent-color: #74c69d;
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #f1f1f1;
+            --text-muted: #aaa;
+            --border-color: #333333;
+            --kpi-bg: #1b3a2b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        main {
+            flex: 1;
+            padding: 30px;
+            max-width: 1500px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .farm-header-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 6px solid var(--accent-color);
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .farm-info-group {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .logo-placeholder {
+            width: 70px;
+            height: 70px;
+            background-color: var(--border-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            border: 2px dashed var(--accent-color);
+            color: var(--secondary-color);
+            cursor: pointer;
+        }
+
+        .farm-details h2 {
+            font-size: 1.4rem;
+            color: var(--primary-color);
+            margin-bottom: 4px;
+        }
+
+        .farm-details p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .farm-meta-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            flex-grow: 1;
+        }
+
+        .meta-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .meta-field label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 3px;
+            text-transform: uppercase;
+        }
+
+        .meta-field input {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .meta-field input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .header-actions {
+            width: 100%;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+            margin-top: 5px;
+            flex-wrap: wrap;
+        }
+
+        .btn-action {
+            background-color: var(--border-color);
+            color: var(--primary-color);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: opacity 0.2s;
+        }
+
+        .btn-action:hover {
+            opacity: 0.8;
+        }
+
+        /* --- Panel KPI de Métricas --- */
+        .kpi-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 16px 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            border-top: 3px solid var(--accent-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .kpi-card span {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .kpi-card h4 {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            border-top: 4px solid var(--secondary-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card h3 {
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .card-chart-container {
+            position: relative;
+            height: 180px;
+            width: 100%;
+            margin: 15px 0;
+            background: var(--bg-color);
+            border-radius: 8px;
+            padding: 5px;
+            border: 1px solid var(--border-color);
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+            color: var(--text-muted);
+        }
+
+        .form-group input, 
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 50px;
+        }
+
+        .form-group input:focus, 
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--accent-color);
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .dynamic-entry {
+            border-top: 1px dashed var(--border-color);
+            margin-top: 14px;
+            padding-top: 14px;
+        }
+
+        .btn-remove {
+            background-color: #e63946;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 600;
+            float: right;
+            margin-bottom: 8px;
+        }
+
+        .btn-remove:hover {
+            background-color: #d90429;
+        }
+
+        @media print {
+            .header-actions, .btn, .btn-remove, .card-chart-container {
+                display: none !important;
+            }
+            .card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+                break-inside: avoid;
+            }
+        }
+
+        @media (max-width: 900px) {
+            main {
+                padding: 15px;
+            }
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <!-- Encabezado de Finca Personalizado -->
+        <div class="farm-header-card">
+            <div class="farm-info-group">
+                <div class="logo-placeholder" title="Logo de Finca">
+                    <span>🌾</span>
+                </div>
+                <div class="farm-details">
+                    <h2 id="display-nombre-finca">Nombre de la Finca</h2>
+                    <p>Panel Profesional daryanaemyr.net</p>
+                </div>
+            </div>
+            <div class="farm-meta-inputs">
+                <div class="meta-field">
+                    <label for="input-finca">Nombre Finca</label>
+                    <input type="text" id="input-finca" placeholder="Ej. Hato San José">
+                </div>
+                <div class="meta-field">
+                    <label for="input-direccion">Ubicación</label>
+                    <input type="text" id="input-direccion" placeholder="Ej. Vía principal">
+                </div>
+                <div class="meta-field">
+                    <label for="input-ruc">RUC / NIT</label>
+                    <input type="text" id="input-ruc" placeholder="Ej. 1234567-1">
+                </div>
+                <div class="meta-field">
+                    <label for="input-propietario">Propietario</label>
+                    <input type="text" id="input-propietario" placeholder="Nombre completo">
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <button class="btn-action" onclick="toggleDarkMode()" title="Cambiar Tema">🌙 Modo Oscuro</button>
+                <button class="btn-action" onclick="exportarDatos()">📥 Exportar Datos</button>
+                <button class="btn-action" onclick="importarDatosPrompt()">📂 Importar Datos</button>
+                <button class="btn-action" onclick="limpiarTodo()" style="color: #e63946;">🗑️ Limpiar Todo</button>
+                <button class="btn-action" onclick="window.print()">🖨️ Imprimir / PDF</button>
+                <button class="btn-action" onclick="compartirPlanificador()">🔗 Compartir Acceso</button>
+            </div>
+        </div>
+
+        <!-- Panel de KPIs en Tiempo Real -->
+        <div class="kpi-container">
+            <div class="kpi-card">
+                <span>🥛 Total Litros Registrados</span>
+                <h4 id="kpi-litros">0 L</h4>
+            </div>
+            <div class="kpi-card">
+                <span>💰 Balance Financiero Neto</span>
+                <h4 id="kpi-finanzas">$0.00</h4>
+            </div>
+            <div class="kpi-card">
+                <span>🩺 Alertas de Sanidad / CMT</span>
+                <h4 id="kpi-sanidad">0 Casos</h4>
+            </div>
+            <div class="kpi-card">
+                <span>📅 Tareas y Citas Activas</span>
+                <h4 id="kpi-tareas">0 Registros</h4>
+            </div>
+        </div>
+
+        <!-- Rejilla con las 8 Secciones, cada una con su propia gráfica -->
+        <div class="dashboard-grid">
+
+            <!-- Sección 1: Control de Ordeño -->
+            <div class="card" id="card-ordenio">
+                <h3>1. Control de Ordeño 🥛</h3>
+                <div class="card-chart-container">
+                    <canvas id="chartOrdenio"></canvas>
+                </div>
+                <div class="entries-wrapper">
+                    <div class="form-group">
+                        <label>Fecha</label>
+                        <input type="date" class="input-fecha">
+                    </div>
+                    <div class="form-group">
+                        <label>Litros Producidos (Tanque)</label>
+                        <input type="number" placeholder="Ej. 1200" class="input-litros">
+                    </div>
+                    <div class="form-group">
+                        <label>Promedio RCS (Células Somáticas)</label>
+                        <input type="number" placeholder="Ej. 180000">
+                    </div>
+                </div>
+                <button class="btn" onclick="agregarEspacio(this)">➕ Agregar Registro</button>
+            </div>
+
+            <!-- Sección 2: Gestión Reproductiva -->
+            <div class="card" id="card-reproduccion">
+                <h3>2. Gestión Reproductiva 🧬</h3>
+                <div class="card-chart-container">
+                    <canvas id="chartReproduccion"></canvas>
+                </div>
+                <div class="entries-wrapper">
+                    <div class="form-group">
+                        <label>Número de Arete Vaca</label>
+                        <input type="text" placeholder="Ej. V-405">
+                    </div>
+                    <div class="form-group">
+                        <label>Evento Reproductivo</label>
+                        <select class="input-repro-evento" onchange="actualizarGraficas()">
+                            <option value="inseminacion">Inseminación / Monta</option>
+                            <option value="diagnostico">Diagnóstico Preñez</option>
+                            <option value="secado">Secado (60d preparto)</option>
+                            <option value="parto">Parto Registrado</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha del Evento</label>
+                        <input type="date">
+                    </div>
+                </div>
+                <button class="btn" onclick="agregarEspacio(this)">➕ Agregar Registro</button>
+            </div>
+
+            <!-- Sección 3: Nutrición y Alimentación -->
+            <div class="card" id="card-nutricion">
+                <h3>3. Nutrición por Grupos 🌿</h3>
+                <div class="card-chart-container">
+                    <canvas id="chartNutricion"></canvas>
+                </div>
+                <div class="entries-wrapper">
+                    <div class="form-group">
+                        <label>Lote Alimentario</label>
+                        <select class="input-nutri-lote" onchange="actualizarGraficas()">
+                            <option value="Alta Producción">Alta Producción (Pico)</option>
+                            <option value="Media/Baja">Media / Baja Producción</option>
+                            <option value="Secas">Vacas Secas / Transición</option>
+                            <option value="Recría">Novillas de Recría</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Consumo Concentrado (kg/vaca)</label>
+                        <input type="number" placeholder="Ej. 6.5" class="input-nutri-val" oninput="actualizarGraficas()">
+                    </div>
+                    <div class="form-group">
+                        <label>Inventario de Silaje (Ton)</label>
+                        <input type="number" placeholder="Ej. 45">
+                    </div>
+                </div>
+                <button class="btn" onclick="agregarEspacio(this)">➕ Agregar Registro</button>
+            </div>
+
+            <!-- Sección 4: Sanidad y Mastitis -->
+            <div class="card" id="card-sanidad">
+                <h3>4. Sanidad y Mastitis (CMT) 🩺</h3>
+                <div class="card-chart-container">
+                    <canvas id="chartSanidad"></canvas>
+                </div>
+                <div class="entries-wrapper">
+                    <div class="form-group">
+                        <label>Arete / Identificación</label>
+                        <input type="text" placeholder="Ej. V-112">
+                    </div>
+                    <div class="form-group">
+                        <label>Resultado Prueba CMT</label>
+                        <select class="input-cmt-res" onchange="actualizarGraficas()">
+                            <option value="Sano">Negativo (Sano)</option>
+                            <option value="Leve">Trazas / Leve</option>
+                            <option value="Positivo 1+">Positivo 1+</option>
+                            <option value="Mastitis Clínica">Positivo 2+ o 3+ (Clínica)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tratamiento / Antibiótico</label>
+                        <input type="text" placeholder="Nombre del producto">
+                    </div>
+                </div>
+                <button class="btn" onclick="agregarEspacio(this)">➕ Agregar Registro</button>
+            </div>
+
+            <!-- Sección 5: Crianza de Terneras -->
+            <div class="card" id="card-recria">
+                <h3>5. Recría de Terneras 🍼</h3>
+                <div class="card-chart-container">
+                    <canvas id="chartRecria"></canvas>
+                </div>
+                <div class="entries-wrapper">
+                    <div class="form-group">
+                        <label>Arete Ternera</label>
+                        <input type="text" placeholder="Ej. T-012">
+                    </div>
+                    <div class="form-group">
+                        <label>Calostro en &lt; 6 horas</label>
+                        <select>
+                            <option value="si">Suministrado Correctamente</option>
+                            <option value="no">Pendiente / Deficiente</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Peso Actual (kg)</label>
+                        <input type="number" placeholder="Ej. 42" class="input-recria-peso" oninput="actualizarGraficas()">
+                    </div>
+                </div>
+                <button class="btn" onclick="agregarEspacio(this)">➕ Agregar Registro</button>
+            </div>
+
+            <!-- Sección 6: Control Financiero y Gastos -->
+            <div class="card" id="card-finanzas">
+                <h3>6. Finanzas (Luz, Agua, Combustible, Planilla) 💰</h3>
+                <div class="card-chart-container">
+                    <canvas id="chartFinanzas"></canvas>
+                </div>
+                <div class="entries-wrapper">
+                    <div class="form-group">
+                        <label>Tipo de Movimiento</label>
+                        <select class="input-tipo-movimiento" onchange="actualizarGraficas()">
+                            <option value="Ingresos">🟢 Ingresos</option>
+                            <option value="Luz">⚡ Luz</option>
+                            <option value="Agua">💧 Agua</option>
+                            <option value="Combustible">⛽ Combustible</option>
+                            <option value="Planilla">👥 Planilla</option>
+                            <option value="Otros">📦 Otros</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Monto ($)</label>
+                        <input type="number" placeholder="Ej. 250.00" class="input-monto" oninput="actualizarGraficas()">
+                    </div>
+                    <div class="form-group">
+                        <label>Descripción / Detalle</label>
+                        <input type="text" placeholder="Detalle del recibo">
+                    </div>
+                </div>
+                <button class="btn" onclick="agregarEspacio(this)">➕ Agregar Registro</button>
+            </div>
+
+            <!-- Sección 7: Cita con Veterinario -->
+            <div class="card" id="card-vet">
+                <h3>7. Cita con Veterinario 👨‍⚕️</h3>
+                <div class="card-chart-container">
+                    <canvas id="chartVet"></canvas>
+                </div>
+                <div class="entries-wrapper">
+                    <div class="form-group">
+                        <label>Veterinario / Clínica</label>
+                        <input type="text" placeholder="Ej. Dr. Mendoza">
+                    </div>
+                    <div class="form-group">
+                        <label>Motivo de la Cita</label>
+                        <select class="input-vet-motivo" onchange="actualizarGraficas()">
+                            <option value="Revisión General">Revisión General</option>
+                            <option value="Palpación/Preñez">Palpación / Preñez</option>
+                            <option value="Vacunación">Vacunación</option>
+                            <option value="Emergencia">Emergencia Clínica</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha y Hora</label>
+                        <input type="datetime-local">
+                    </div>
+                </div>
+                <button class="btn" onclick="agregarEspacio(this)">➕ Agregar Registro</button>
+            </div>
+
+            <!-- Sección 8: Calendario de Actividades -->
+            <div class="card" id="card-calendario">
+                <h3>8. Calendario de Actividades 📅</h3>
+                <div class="card-chart-container">
+                    <canvas id="chartCalendario"></canvas>
+                </div>
+                <div class="entries-wrapper">
+                    <div class="form-group">
+                        <label>Fecha de Actividad</label>
+                        <input type="date">
+                    </div>
+                    <div class="form-group">
+                        <label>Categoría de Tarea</label>
+                        <select class="input-cal-cat" onchange="actualizarGraficas()">
+                            <option value="Sanidad">Vacunación / Sanidad</option>
+                            <option value="Mantenimiento">Mantenimiento</option>
+                            <option value="Pastoreo">Rotación Potreros</option>
+                            <option value="General">General Finca</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Descripción de la Tarea</label>
+                        <input type="text" placeholder="Ej. Aplicación de vitaminas">
+                    </div>
+                </div>
+                <button class="btn" onclick="agregarEspacio(this)">➕ Agregar Registro</button>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // Sincronizar nombre de finca
+        const inputFinca = document.getElementById('input-finca');
+        const displayFinca = document.getElementById('display-nombre-finca');
+        inputFinca.addEventListener('input', (e) => {
+            displayFinca.textContent = e.target.value.trim() !== '' ? e.target.value : 'Nombre de la Finca';
+        });
+
+        function compartirPlanificador() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Planificador de Finca Lechera',
+                    text: 'Panel de control operativo daryanaemyr.net',
+                    url: window.location.href
+                }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(window.location.href);
+                alert('¡Enlace copiado al portapapeles!');
+            }
+        }
+
+        // --- Configuración de las 8 Gráficas Independientes ---
+        const chartOrdenio = new Chart(document.getElementById('chartOrdenio').getContext('2d'), {
+            type: 'line',
+            data: { labels: ['Reg 1'], datasets: [{ label: 'Litros', data: [0], borderColor: '#2d6a4f', backgroundColor: 'rgba(82,183,136,0.1)', borderWidth: 2, fill: true, tension: 0.3 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+
+        const chartReproduccion = new Chart(document.getElementById('chartReproduccion').getContext('2d'), {
+            type: 'bar',
+            data: { labels: ['Inseminación', 'Diagnóstico', 'Secado', 'Parto'], datasets: [{ label: 'Registros', data: [0, 0, 0, 0], backgroundColor: ['#457b9d', '#1d3557', '#e76f51', '#2a9d8f'] }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+
+        const chartNutricion = new Chart(document.getElementById('chartNutricion').getContext('2d'), {
+            type: 'bar',
+            data: { labels: ['Alta Prod.', 'Media/Baja', 'Secas', 'Recría'], datasets: [{ label: 'Kg Promedio', data: [0, 0, 0, 0], backgroundColor: '#52b788' }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+
+        const chartSanidad = new Chart(document.getElementById('chartSanidad').getContext('2d'), {
+            type: 'doughnut',
+            data: { labels: ['Sano', 'Leve', 'Positivo 1+', 'Clínica'], datasets: [{ data: [1, 0, 0, 0], backgroundColor: ['#2a9d8f', '#e9c46a', '#f4a261', '#e76f51'] }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10 } } } }
+        });
+
+        const chartRecria = new Chart(document.getElementById('chartRecria').getContext('2d'), {
+            type: 'line',
+            data: { labels: ['Ternera 1'], datasets: [{ label: 'Peso (kg)', data: [0], borderColor: '#457b9d', borderWidth: 2, tension: 0.2 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+
+        const chartFinanzas = new Chart(document.getElementById('chartFinanzas').getContext('2d'), {
+            type: 'doughnut',
+            data: { labels: ['Ingresos', 'Luz', 'Agua', 'Combustible', 'Planilla', 'Otros'], datasets: [{ data: [0, 0, 0, 0, 0, 0], backgroundColor: ['#52b788', '#f4a261', '#457b9d', '#e76f51', '#264653', '#6c757d'] }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10 } } } }
+        });
+
+        const chartVet = new Chart(document.getElementById('chartVet').getContext('2d'), {
+            type: 'bar',
+            data: { labels: ['Revisión', 'Palpación', 'Vacunación', 'Emergencia'], datasets: [{ label: 'Citas', data: [0, 0, 0, 0], backgroundColor: '#264653' }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+
+        const chartCalendario = new Chart(document.getElementById('chartCalendario').getContext('2d'), {
+            type: 'bar',
+            data: { labels: ['Sanidad', 'Mantenim.', 'Pastoreo', 'General'], datasets: [{ label: 'Tareas', data: [0, 0, 0, 0], backgroundColor: '#2a9d8f' }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+
+        // --- Funciones de Actualización Dinámica y KPIs ---
+        function actualizarGraficas() {
+            // 1. Ordeño
+            const litrosInputs = document.querySelectorAll('#card-ordenio .input-litros');
+            let lData = [], lLabels = [], totalLitros = 0;
+            litrosInputs.forEach((inp, idx) => {
+                let val = parseFloat(inp.value) || 0;
+                lData.push(val);
+                totalLitros += val;
+                lLabels.push(`Reg ${idx + 1}`);
+            });
+            chartOrdenio.data.labels = lLabels;
+            chartOrdenio.data.datasets[0].data = lData;
+            chartOrdenio.update();
+            document.getElementById('kpi-litros').textContent = totalLitros.toLocaleString() + ' L';
+
+            // 2. Reproducción
+            let repCounts = { 'inseminacion': 0, 'diagnostico': 0, 'secado': 0, 'parto': 0 };
+            document.querySelectorAll('#card-reproduccion .input-repro-evento').forEach(sel => {
+                if (repCounts.hasOwnProperty(sel.value)) repCounts[sel.value]++;
+            });
+            chartReproduccion.data.datasets[0].data = [repCounts['inseminacion'], repCounts['diagnostico'], repCounts['secado'], repCounts['parto']];
+            chartReproduccion.update();
+
+            // 3. Nutrición
+            let nutValues = { 'Alta Producción': 0, 'Media/Baja': 0, 'Secas': 0, 'Recría': 0 };
+            document.querySelectorAll('#card-nutricion .entries-wrapper').forEach(en => {
+                let lote = en.querySelector('.input-nutri-lote').value;
+                let val = parseFloat(en.querySelector('.input-nutri-val').value) || 0;
+                if(nutValues.hasOwnProperty(lote)) nutValues[lote] += val;
+            });
+            chartNutricion.data.datasets[0].data = [nutValues['Alta Producción'], nutValues['Media/Baja'], nutValues['Secas'], nutValues['Recría']];
+            chartNutricion.update();
+
+            // 4. Sanidad CMT
+            let cmtCounts = { 'Sano': 0, 'Leve': 0, 'Positivo 1+': 0, 'Mastitis Clínica': 0 };
+            document.querySelectorAll('#card-sanidad .input-cmt-res').forEach(sel => {
+                if(cmtCounts.hasOwnProperty(sel.value)) cmtCounts[sel.value]++;
+            });
+            chartSanidad.data.datasets[0].data = [cmtCounts['Sano'], cmtCounts['Leve'], cmtCounts['Positivo 1+'], cmtCounts['Mastitis Clínica']];
+            chartSanidad.update();
+            let totalMastitis = cmtCounts['Leve'] + cmtCounts['Positivo 1+'] + cmtCounts['Mastitis Clínica'];
+            document.getElementById('kpi-sanidad').textContent = totalMastitis + ' Casos';
+
+            // 5. Recría
+            let recData = [], recLabels = [];
+            document.querySelectorAll('#card-recria .input-recria-peso').forEach((inp, idx) => {
+                let val = parseFloat(inp.value) || 0;
+                recData.push(val);
+                recLabels.push(`T-${idx + 1}`);
+            });
+            chartRecria.data.labels = recLabels;
+            chartRecria.data.datasets[0].data = recData;
+            chartRecria.update();
+
+            // 6. Finanzas
+            let finValues = { 'Ingresos': 0, 'Luz': 0, 'Agua': 0, 'Combustible': 0, 'Planilla': 0, 'Otros': 0 };
+            document.querySelectorAll('#card-finanzas .entries-wrapper').forEach(en => {
+                let tipo = en.querySelector('.input-tipo-movimiento').value;
+                let monto = parseFloat(en.querySelector('.input-monto').value) || 0;
+                if(finValues.hasOwnProperty(tipo)) finValues[tipo] += monto;
+            });
+            chartFinanzas.data.datasets[0].data = [finValues['Ingresos'], finValues['Luz'], finValues['Agua'], finValues['Combustible'], finValues['Planilla'], finValues['Otros']];
+            chartFinanzas.update();
+            
+            let totalGastos = finValues['Luz'] + finValues['Agua'] + finValues['Combustible'] + finValues['Planilla'] + finValues['Otros'];
+            let balanceNeto = finValues['Ingresos'] - totalGastos;
+            document.getElementById('kpi-finanzas').textContent = '$' + balanceNeto.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+            // 7. Veterinario
+            let vetCounts = { 'Revisión General': 0, 'Palpación/Preñez': 0, 'Vacunación': 0, 'Emergencia': 0 };
+            document.querySelectorAll('#card-vet .input-vet-motivo').forEach(sel => {
+                if(vetCounts.hasOwnProperty(sel.value)) vetCounts[sel.value]++;
+            });
+            chartVet.data.datasets[0].data = [vetCounts['Revisión General'], vetCounts['Palpación/Preñez'], vetCounts['Vacunación'], vetCounts['Emergencia']];
+            chartVet.update();
+
+            // 8. Calendario
+            let calCounts = { 'Sanidad': 0, 'Mantenimiento': 0, 'Pastoreo': 0, 'General': 0 };
+            document.querySelectorAll('#card-calendario .input-cal-cat').forEach(sel => {
+                if(calCounts.hasOwnProperty(sel.value)) calCounts[sel.value]++;
+            });
+            chartCalendario.data.datasets[0].data = [calCounts['Sanidad'], calCounts['Mantenimiento'], calCounts['Pastoreo'], calCounts['General']];
+            chartCalendario.update();
+
+            let totalTareas = calCounts['Sanidad'] + calCounts['Mantenimiento'] + calCounts['Pastoreo'] + calCounts['General'];
+            document.getElementById('kpi-tareas').textContent = totalTareas + ' Registros';
+        }
+
+        // Función para agregar un nuevo bloque de entrada en cualquier tarjeta
+        function agregarEspacio(button) {
+            const card = button.closest('.card');
+            const firstWrapper = card.querySelector('.entries-wrapper');
+            const clone = firstWrapper.cloneNode(true);
+            
+            // Limpiar valores de los inputs clonados
+            clone.querySelectorAll('input').forEach(input => input.value = '');
+            clone.querySelectorAll('select').forEach(select => select.selectedIndex = 0);
+            
+            // Agregar botón de eliminar
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'btn-remove';
+            removeBtn.textContent = '❌ Eliminar';
+            removeBtn.onclick = function() {
+                wrapperContainer.remove();
+                actualizarGraficas();
+            };
+            
+            const wrapperContainer = document.createElement('div');
+            wrapperContainer.className = 'dynamic-entry';
+            wrapperContainer.appendChild(removeBtn);
+            wrapperContainer.appendChild(clone);
+            
+            card.insertBefore(wrapperContainer, button);
+            
+            // Agregar listeners para actualización en tiempo real a los nuevos inputs
+            wrapperContainer.querySelectorAll('input, select').forEach(el => {
+                el.addEventListener('input', actualizarGraficas);
+                el.addEventListener('change', actualizarGraficas);
+            });
+            
+            actualizarGraficas();
+        }
+
+        // Escuchar cambios iniciales en los inputs predeterminados
+        document.querySelectorAll('.card input, .card select').forEach(el => {
+            el.addEventListener('input', actualizarGraficas);
+            el.addEventListener('change', actualizarGraficas);
+        });
+
+        // Funciones de Tema, Exportar, Importar, Limpiar
+        function toggleDarkMode() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            if (currentTheme === 'dark') {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                event.target.textContent = '🌙 Modo Oscuro';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                event.target.textContent = '☀️ Modo Claro';
+            }
+        }
+
+        // Cargar tema guardado
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+            actualizarGraficas();
+        });
+
+        function exportarDatos() {
+            const inputs = document.querySelectorAll('input, select, textarea');
+            const data = {};
+            inputs.forEach((inp, idx) => {
+                data[idx] = { id: inp.id, name: inp.name, value: inp.value, type: inp.type };
+            });
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'planificador_finca_lechera.json';
+            a.click();
+        }
+
+        function importarDatosPrompt() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = e => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = event => {
+                    try {
+                        const data = JSON.parse(event.target.result);
+                        const inputs = document.querySelectorAll('input, select, textarea');
+                        Object.keys(data).forEach(key => {
+                            if (inputs[key]) {
+                                inputs[key].value = data[key].value;
+                            }
+                        });
+                        actualizarGraficas();
+                        alert('¡Datos importados con éxito!');
+                    } catch (err) {
+                        alert('Error al leer el archivo JSON.');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        function limpiarTodo() {
+            if (confirm('¿Estás seguro de que deseas limpiar todos los datos del planificador?')) {
+                document.querySelectorAll('input').forEach(inp => {
+                    if(inp.type !== 'date' && inp.type !== 'datetime-local') inp.value = '';
+                });
+                document.querySelectorAll('select').forEach(sel => sel.selectedIndex = 0);
+                document.querySelectorAll('.dynamic-entry').forEach(el => el.remove());
+                actualizarGraficas();
+                alert('Planificador restablecido.');
+            }
+        }
+    </script>
+</body>
+</html>
