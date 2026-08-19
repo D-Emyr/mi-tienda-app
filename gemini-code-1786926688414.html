@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planificador Financiero - Puesto de Legumbres</title>
+    <style>
+        :root {
+            --primary: #2e7d32; 
+            --accent: #f39c12; 
+            --bg: #f9fbe7; 
+            --text: #333;
+            --border: #c8e6c9;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg);
+            color: var(--text);
+        }
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border-top: 8px solid var(--primary);
+        }
+
+        /* CABECERA EDITABLE */
+        header {
+            text-align: center;
+            border-bottom: 2px dashed var(--border);
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        .input-header {
+            border: 1px dashed #ccc;
+            background: transparent;
+            font-family: inherit;
+            color: inherit;
+            text-align: center;
+            border-radius: 4px;
+            padding: 4px;
+            margin: 2px 0;
+            transition: border 0.3s;
+        }
+        .input-header:focus { border: 1px solid var(--primary); outline: none; background: #fff; }
+        .input-header::placeholder { color: #999; }
+        
+        .logo-input { font-size: 40px; width: 150px; }
+        .title-input { font-size: 28px; font-weight: bold; color: var(--primary); width: 80%; }
+        .info-input { font-size: 14px; width: 200px; text-align: left; }
+        .dir-input { font-size: 14px; width: 60%; text-align: left; }
+        
+        .empresa-info { font-size: 14px; color: #555; line-height: 1.8; margin-top: 10px; }
+        .vendedor-badge {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+        .vendedor-input {
+            background: transparent;
+            border: 1px dashed rgba(255,255,255,0.5);
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            width: 200px;
+            padding: 2px 5px;
+        }
+        .vendedor-input::placeholder { color: rgba(255,255,255,0.7); }
+        .vendedor-input:focus { background: rgba(255,255,255,0.2); outline: none; border-color: white; }
+
+        h3 { color: var(--primary); border-left: 4px solid var(--accent); padding-left: 10px; margin-bottom: 15px; }
+        
+        .calendar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-bottom: 30px; }
+        .day-card { background: #fafafa; border: 1px solid var(--border); border-radius: 6px; padding: 10px; text-align: center; }
+        .day-card label { display: block; font-size: 12px; font-weight: bold; color: #666; margin-bottom: 5px; }
+        .day-card input { width: 85%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; text-align: center; font-weight: bold; color: var(--primary); }
+
+        .panel-operativo { display: flex; gap: 25px; flex-wrap: wrap; }
+        .seccion-gastos { flex: 2; min-width: 300px; }
+        .seccion-calculadora { flex: 1; min-width: 250px; background: #e8f5e9; padding: 20px; border-radius: 8px; border: 1px solid var(--border); }
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid var(--border); padding: 10px; text-align: left; font-size: 14px; }
+        th { background-color: #f1f8e9; color: var(--primary); }
+        .input-gasto { width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; }
+        
+        .calc-pantalla { width: 100%; height: 45px; font-size: 24px; text-align: right; padding: 5px 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 15px; background: #fff; color: var(--text); font-family: monospace; }
+        .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .calc-btn { padding: 15px 0; font-size: 18px; font-weight: bold; cursor: pointer; border: none; border-radius: 6px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .calc-btn.op { background: var(--accent); color: white; }
+        .calc-btn.clear { background: #e74c3c; color: white; grid-column: span 2; }
+        .calc-btn.eq { background: var(--primary); color: white; grid-column: span 2; }
+
+        .totales-panel { display: flex; justify-content: space-between; margin-top: 30px; gap: 15px; flex-wrap: wrap; }
+        .caja-total { flex: 1; min-width: 200px; padding: 20px; border-radius: 8px; text-align: center; font-size: 16px; font-weight: bold; }
+        .bg-ventas { background: #e8f5e9; color: var(--primary); border: 1px solid var(--border); }
+        .bg-gastos { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+        .bg-balance { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; font-size: 20px; }
+
+        .acciones-copia { display: flex; gap: 15px; margin-top: 30px; }
+        .btn-accion { flex: 1; padding: 15px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; color: white; }
+        .btn-imprimir { background: var(--primary); }
+        .btn-whatsapp { background: #25D366; }
+
+        @media print {
+            .no-imprimir, .acciones-copia, .seccion-calculadora { display: none !important; }
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; border: none; margin: 0; padding: 0; max-width: 100%; }
+            .seccion-gastos { flex: 100%; min-width: 100%; }
+            .input-header { border: none !important; background: transparent !important; }
+            .vendedor-input { border: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- CABECERA EDITABLE -->
+    <header>
+        <div>
+            <input type="text" id="cliLogo" class="input-header logo-input" value="🥬🍅🧅" placeholder="Emojis o Logo" oninput="guardarDatosCliente()">
+        </div>
+        <div>
+            <input type="text" id="cliNombre" class="input-header title-input" value="Mercadito Verde Fresco" placeholder="Ej. Mercadito El Sol" oninput="guardarDatosCliente()">
+        </div>
+        <div class="empresa-info">
+            <strong>RUC / ID:</strong> <input type="text" id="cliRuc" class="input-header info-input" value="8-NT-98765 DV 21" placeholder="Escribe tu RUC aquí" oninput="guardarDatosCliente()"><br>
+            <strong>Dirección:</strong> <input type="text" id="cliDir" class="input-header dir-input" value="Puesto #42, Mercado Agrícola Central, Panamá" placeholder="Ej. Puesto #42" oninput="guardarDatosCliente()">
+        </div>
+        <div class="vendedor-badge">
+            👤 Vendedor / Encargado: <input type="text" id="cliVendedor" class="vendedor-input" value="Daryana Emyr Miranda" placeholder="Tu Nombre Aquí" oninput="guardarDatosCliente()">
+        </div>
+    </header>
+
+    <!-- CONTENIDO ACTIVO -->
+    <div>
+        <h3 class="no-imprimir">📅 Registro de Ventas Diarias</h3>
+        <div class="calendar-grid no-imprimir" id="calendarioVentas"></div>
+
+        <div class="panel-operativo">
+            <div class="seccion-gastos">
+                <h3>💸 Gastos Operativos del Puesto</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Concepto de Gasto</th>
+                            <th>Monto ($)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>💡 Luz (Energía)</td><td><input type="number" class="input-gasto" id="gastoLuz" value="0" min="0" step="0.01" oninput="calcularFinanzas()"></td></tr>
+                        <tr><td>🚰 Agua</td><td><input type="number" class="input-gasto" id="gastoAgua" value="0" min="0" step="0.01" oninput="calcularFinanzas()"></td></tr>
+                        <tr><td>🏪 Alquiler</td><td><input type="number" class="input-gasto" id="gastoAlquiler" value="0" min="0" step="0.01" oninput="calcularFinanzas()"></td></tr>
+                        <tr><td>💵 Salario</td><td><input type="number" class="input-gasto" id="gastoSalario" value="0" min="0" step="0.01" oninput="calcularFinanzas()"></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="seccion-calculadora">
+                <h3 style="margin-top:0;">🧮 Calculadora</h3>
+                <input type="text" id="calcPantalla" class="calc-pantalla" disabled value="0">
+                <div class="calc-grid">
+                    <button class="calc-btn clear" onclick="calcLimpiar()">C</button>
+                    <button class="calc-btn op" onclick="calcDigito('/')">÷</button>
+                    <button class="calc-btn op" onclick="calcDigito('*')">×</button>
+                    <button class="calc-btn" onclick="calcDigito('7')">7</button>
+                    <button class="calc-btn" onclick="calcDigito('8')">8</button>
+                    <button class="calc-btn" onclick="calcDigito('9')">9</button>
+                    <button class="calc-btn op" onclick="calcDigito('-')">-</button>
+                    <button class="calc-btn" onclick="calcDigito('4')">4</button>
+                    <button class="calc-btn" onclick="calcDigito('5')">5</button>
+                    <button class="calc-btn" onclick="calcDigito('6')">6</button>
+                    <button class="calc-btn op" onclick="calcDigito('+')">+</button>
+                    <button class="calc-btn" onclick="calcDigito('1')">1</button>
+                    <button class="calc-btn" onclick="calcDigito('2')">2</button>
+                    <button class="calc-btn" onclick="calcDigito('3')">3</button>
+                    <button class="calc-btn eq" style="grid-row: span 2;" onclick="calcResolver()">=</button>
+                    <button class="calc-btn" style="grid-column: span 2;" onclick="calcDigito('0')">0</button>
+                    <button class="calc-btn" onclick="calcDigito('.')">.</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="totales-panel">
+            <div class="caja-total bg-ventas">Ingresos Totales<br>$<span id="lblTotalVentas">0.00</span></div>
+            <div class="caja-total bg-gastos">Gastos Totales<br>$<span id="lblTotalGastos">0.00</span></div>
+            <div class="caja-total bg-balance">Balance Neto<br>$<span id="lblBalance">0.00</span></div>
+        </div>
+
+        <div class="acciones-copia">
+            <button class="btn-accion btn-imprimir" onclick="window.print()">🖨️ Sacar Copia (Imprimir / PDF)</button>
+            <button class="btn-accion btn-whatsapp" onclick="copiarResumen()">📋 Copiar Resumen (Digital)</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function guardarDatosCliente() {
+        const datos = {
+            logo: document.getElementById('cliLogo').value,
+            nombre: document.getElementById('cliNombre').value,
+            ruc: document.getElementById('cliRuc').value,
+            dir: document.getElementById('cliDir').value,
+            vendedor: document.getElementById('cliVendedor').value
+        };
+        localStorage.setItem('datos_cliente_legumbres', JSON.stringify(datos));
+    }
+
+    function cargarDatosCliente() {
+        const guardado = localStorage.getItem('datos_cliente_legumbres');
+        if (guardado) {
+            const datos = JSON.parse(guardado);
+            document.getElementById('cliLogo').value = datos.logo || '';
+            document.getElementById('cliNombre').value = datos.nombre || '';
+            document.getElementById('cliRuc').value = datos.ruc || '';
+            document.getElementById('cliDir').value = datos.dir || '';
+            document.getElementById('cliVendedor').value = datos.vendedor || '';
+        }
+    }
+
+    const contenedorCalendario = document.getElementById('calendarioVentas');
+    for (let i = 1; i <= 31; i++) {
+        contenedorCalendario.innerHTML += `
+            <div class="day-card">
+                <label>Día ${i}</label>
+                <input type="number" class="venta-diaria" value="0" min="0" step="0.01" oninput="calcularFinanzas()">
+            </div>
+        `;
+    }
+
+    function calcularFinanzas() {
+        let totalVentas = 0;
+        document.querySelectorAll('.venta-diaria').forEach(input => {
+            totalVentas += parseFloat(input.value) || 0;
+        });
+
+        const luz = parseFloat(document.getElementById('gastoLuz').value) || 0;
+        const agua = parseFloat(document.getElementById('gastoAgua').value) || 0;
+        const alquiler = parseFloat(document.getElementById('gastoAlquiler').value) || 0;
+        const salario = parseFloat(document.getElementById('gastoSalario').value) || 0;
+        const totalGastos = luz + agua + alquiler + salario;
+        const balanceNeto = totalVentas - totalGastos;
+
+        document.getElementById('lblTotalVentas').innerText = totalVentas.toFixed(2);
+        document.getElementById('lblTotalGastos').innerText = totalGastos.toFixed(2);
+        document.getElementById('lblBalance').innerText = balanceNeto.toFixed(2);
+    }
+
+    function copiarResumen() {
+        const nombreNegocio = document.getElementById('cliNombre').value || "Mi Negocio";
+        const vendedor = document.getElementById('cliVendedor').value || "Vendedor";
+        const logo = document.getElementById('cliLogo').value || "📊";
+
+        const ingresos = document.getElementById('lblTotalVentas').innerText;
+        const gastos = document.getElementById('lblTotalGastos').innerText;
+        const balance = document.getElementById('lblBalance').innerText;
+        
+        const texto = `${logo} *Resumen - ${nombreNegocio}* ${logo}\n👤 Encargado: ${vendedor}\n\n📈 *Ingresos:* $${ingresos}\n📉 *Gastos:* $${gastos}\n💰 *Balance Neto:* $${balance}\n\n_Generado desde el Planificador Operativo_`;
+        
+        navigator.clipboard.writeText(texto).then(() => {
+            alert("¡Resumen copiado exitosamente!");
+        }).catch(err => {
+            alert("Error al copiar.");
+        });
+    }
+
+    let expresionCalc = "";
+    const pantalla = document.getElementById('calcPantalla');
+
+    function calcDigito(valor) {
+        if (pantalla.value === "0" || pantalla.value === "Error") expresionCalc = "";
+        expresionCalc += valor;
+        pantalla.value = expresionCalc;
+    }
+
+    function calcResolver() {
+        try {
+            const resultado = Function('"use strict";return (' + expresionCalc + ')')();
+            pantalla.value = resultado;
+            expresionCalc = resultado.toString();
+        } catch (e) {
+            pantalla.value = "Error";
+            expresionCalc = "";
+        }
+    }
+
+    function calcLimpiar() {
+        expresionCalc = "";
+        pantalla.value = "0";
+    }
+
+    window.onload = function() {
+        cargarDatosCliente();
+    };
+</script>
+
+</body>
+</html>
